@@ -1,8 +1,8 @@
-#Chat - a swifty way to chat
+# Chat - a swifty way to chat
 
 Chat is a native iOS application in which it combines many technologies and frameworks together to deliver a fast and efficient way to send and receives messages.
 
-##Features:
+## Features:
     * Authentication with email
     * Send and receives text
     * Send and receive images
@@ -13,7 +13,7 @@ Chat is a native iOS application in which it combines many technologies and fram
     * Save pictures to device
     * Light/Dark mode
 
-##Technical:
+## Technical:
     
     * For the backend I used Google Firebase services like Database, Auth, Storage to store and 
       observe data in the app.
