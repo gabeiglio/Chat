@@ -15,7 +15,8 @@ Chat is a native iOS application in which it combines many technologies and fram
 
 ##Technical:
     
-    * For the backend I used Google Firebase services like Database, Auth, Storage to store and observe data in the app.
+    * For the backend I used Google Firebase services like Database, Auth, Storage to store and 
+      observe data in the app.
     * Used UIKit to create all the user interface programatically, making full use of constraints.
     * For the app architecture I used MVC (Model View Controller)
     * Used asynchronous requests in order to download data (images mostly) in order to the UI not to freeze while
