@@ -110,7 +110,7 @@ extension AuthDynamicView {
             self.actionButton.topAnchor.constraint(equalTo: self.bottomAnchor, constant: 20),
             self.actionButton.leftAnchor.constraint(equalTo: self.leftAnchor),
             self.actionButton.rightAnchor.constraint(equalTo: self.rightAnchor),
-            self.heightAnchor.constraint(equalToConstant: 40)
+            self.actionButton.heightAnchor.constraint(equalToConstant: 40)
         ])
 
     }
