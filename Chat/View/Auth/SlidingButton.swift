@@ -33,8 +33,9 @@ class SlidingButton: UIView {
     
     let indicatorView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black
+        view.backgroundColor = UIColor(red: 255/255, green: 87/255, blue: 34/255, alpha: 1)
         view.translatesAutoresizingMaskIntoConstraints = false
+        view.layer.cornerRadius = 2
         return view
     }()
     

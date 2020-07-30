@@ -8,6 +8,10 @@
 
 import UIKit
 
+enum InputError: Error {
+    case invalidInput
+}
+
 class AuthDynamicView: UIView {
     
     private let emailTextField: UITextField = {
@@ -33,13 +37,6 @@ class AuthDynamicView: UIView {
         return textfield
     }()
     
-    private let actionButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setTitle("Sign In!", for: .normal)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.setupViews()
@@ -49,6 +46,7 @@ class AuthDynamicView: UIView {
         super.init(coder: coder)
     }
     
+    //Animation for name textfield (show/hide)
     public func hideNameTextfield() {
         self.nameTextField.isHidden = true
     }
@@ -57,9 +55,14 @@ class AuthDynamicView: UIView {
         self.nameTextField.isHidden = false
     }
     
-    public func setButtonTitle(name: String) {
-        self.actionButton.setTitle(name, for: .normal)
+    //Getter of the values of the textfields
+    public func getValuesOfTextfields() throws -> [String:String] {
+        guard let name = self.nameTextField.text, let email = self.emailTextField.text, let password = self.passwordTextfield.text else {
+            throw InputError.invalidInput
+        }
+        return ["name":name,"email":email,"password":password]
     }
+
 }
 
 extension AuthDynamicView {
@@ -75,6 +78,7 @@ extension AuthDynamicView {
         //Initial state
         self.hideNameTextfield()
         
+        //Calculate height of textfields (3)
         let textFieldHeight = ((UIScreen.main.bounds.height / 3) / 3) - 20
         
         //Password textfield
@@ -102,15 +106,6 @@ extension AuthDynamicView {
             self.nameTextField.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 10),
             self.nameTextField.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -10),
             self.nameTextField.heightAnchor.constraint(equalToConstant: textFieldHeight),
-        ])
-        
-        //Done button
-        self.addSubview(self.actionButton)
-        NSLayoutConstraint.activate([
-            self.actionButton.topAnchor.constraint(equalTo: self.bottomAnchor, constant: 20),
-            self.actionButton.leftAnchor.constraint(equalTo: self.leftAnchor),
-            self.actionButton.rightAnchor.constraint(equalTo: self.rightAnchor),
-            self.actionButton.heightAnchor.constraint(equalToConstant: 40)
         ])
 
     }
