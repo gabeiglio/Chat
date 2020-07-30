@@ -7,10 +7,18 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 class AuthViewController: UIViewController {
     
+    //Keep track if the user is singing in or creating an account
+    private enum AuthState {
+        case signIn
+        case create
+    }
+    
     //Custom UI private properties
+    private let actionButton = ActionButton(type: .system)
     private let slidingButton = SlidingButton()
     private let authView = AuthDynamicView()
     
@@ -21,6 +29,9 @@ class AuthViewController: UIViewController {
     
     //State of keyboard being shown
     private var isKeyboardOut = false
+    
+    //State of the auth
+    private var authState = AuthState.signIn
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,27 +46,66 @@ class AuthViewController: UIViewController {
         //Setup views for the controller
         self.setupView()
     }
+    
+    @objc private func didTapActionButton() {
+        //Get values of textfields
+        do {
+            let values = try self.authView.getValuesOfTextfields()
+            
+            //They are guaranteed to exist
+            let name = values["name"]!
+            let email = values["email"]!
+            let password = values["password"]!
+            
+            switch self.authState {
+            case .create: createAccount(name: name, email: email, password: password)
+            case .signIn: signIn(email: email, password: password)
+            }
+            
+            
+        } catch let error { print(error.localizedDescription) }
+    }
 }
 
-extension AuthViewController: SlidingButtonDelegate {
-    func didTapSignInButton() {
-        self.heightAuthViewAnchor?.constant -= (self.view.frame.height / 3) / 3
-        
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
-            self.authView.hideNameTextfield()
-            self.authView.setButtonTitle(name: "Sign in!")
-            self.view.layoutIfNeeded()
-        }, completion: nil)
+//Handle auth logic
+extension AuthViewController {
+    private func signIn(email: String, password: String) {
+        Network.signInToAccount(email: email, password: password) { (result) in
+            //Transition and pass user to other view
+        }
     }
     
-    func didTapCreateButton() {
+    private func createAccount(name: String, email: String, password: String) {
+        Network.createAccount(name: name, email: email, password: password) { (result) in
+            //Transition and pass user to other view
+        }
+    }
+}
+
+//Methods of the sliding button delegate
+extension AuthViewController: SlidingButtonDelegate {
+    internal func didTapSignInButton() {
+        self.authState = .signIn
+        self.heightAuthViewAnchor?.constant -= (self.view.frame.height / 3) / 3
+
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
+            self.authView.hideNameTextfield()
+            self.view.layoutIfNeeded()
+        }) { (completion) in
+            self.actionButton.setButtonTitle(name: "Sign in!")
+        }
+    }
+    
+    internal func didTapCreateButton() {
+        self.authState = .create
         self.heightAuthViewAnchor?.constant += (self.view.frame.height / 3) / 3
-        
+
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.authView.showNameTextfield()
-            self.authView.setButtonTitle(name: "Create account!")
             self.view.layoutIfNeeded()
-        }, completion: nil)
+        }) { (completion) in
+            self.actionButton.setButtonTitle(name: "Create account!")
+        }
     }
 }
 
@@ -90,6 +140,17 @@ extension AuthViewController {
             self.slidingButton.rightAnchor.constraint(equalTo: self.authView.rightAnchor),
             self.slidingButton.heightAnchor.constraint(equalToConstant: 50)
         ])
+        
+        //Add action Button
+        self.view.addSubview(self.actionButton)
+        NSLayoutConstraint.activate([
+            self.actionButton.topAnchor.constraint(equalTo: self.authView.bottomAnchor, constant: 20),
+            self.actionButton.leftAnchor.constraint(equalTo: self.authView.leftAnchor),
+            self.actionButton.rightAnchor.constraint(equalTo: self.authView.rightAnchor),
+            self.actionButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        self.actionButton.addTarget(self, action: #selector(self.didTapActionButton), for: .touchUpInside)
     }
 }
 
@@ -106,7 +167,7 @@ extension AuthViewController {
         guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
             { return }
         
-        //Calculate the center of the availabel space between the top of the keyboard to the top of the view
+        //Calculate the center of the availabe space between the top of the keyboard to the top of the view (some weird teaking also)
         let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
         self.centerAuthViewAnchor?.constant -= availableSpace
         
@@ -125,7 +186,7 @@ extension AuthViewController {
         guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
         { return }
         
-        //Calculate the center of the availabel space between the top of the keyboard to the top of the view
+        //Calculate the center of the availabel space between the top of the keyboard to the top of the view (some weird teaking also)
         let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
         self.centerAuthViewAnchor?.constant += availableSpace
         
