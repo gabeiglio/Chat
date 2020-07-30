@@ -19,6 +19,9 @@ class AuthViewController: UIViewController {
     private var heightAuthViewAnchor: NSLayoutConstraint?
     private var centerAuthViewAnchorKeyboard: NSLayoutConstraint?
     
+    //State of keyboard being shown
+    private var isKeyboardOut = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -97,6 +100,7 @@ extension AuthViewController {
     }
     
     @objc internal func keyboardWillShow(notification: Notification) {
+        if isKeyboardOut == true { return }
         
         //Height of the keyboard
         guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
@@ -110,9 +114,13 @@ extension AuthViewController {
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
         }, completion: nil)
+        
+        isKeyboardOut = true
     }
     
     @objc internal func keyboardWillHide(notification: Notification) {
+        if isKeyboardOut == false { return }
+        
         //Height of the keyboard
         guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
         { return }
@@ -124,5 +132,7 @@ extension AuthViewController {
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
         }, completion: nil)
+        
+        isKeyboardOut = false
     }
 }
