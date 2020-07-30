@@ -15,9 +15,9 @@ class AuthViewController: UIViewController {
     private let authView = AuthDynamicView()
     
     //Authview anchor
-    private var topAuthViewAnchor: NSLayoutConstraint?
     private var centerAuthViewAnchor: NSLayoutConstraint?
     private var heightAuthViewAnchor: NSLayoutConstraint?
+    private var centerAuthViewAnchorKeyboard: NSLayoutConstraint?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -70,10 +70,6 @@ extension AuthViewController {
         self.centerAuthViewAnchor = self.authView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
         self.centerAuthViewAnchor?.isActive = true
         
-        //Top anchor
-        self.topAuthViewAnchor = self.authView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 70)
-        self.topAuthViewAnchor?.isActive = false
-        
         //Height anchor
         self.heightAuthViewAnchor = self.authView.heightAnchor.constraint(equalToConstant: (self.view.frame.height / 3) - (self.view.frame.height / 3) / 3)
         self.heightAuthViewAnchor?.isActive = true
@@ -94,23 +90,36 @@ extension AuthViewController {
     }
 }
 
+//Keyboard notification observers implmentation
 extension AuthViewController {
     @objc private func didTapBackgroundView() {
         self.view.endEditing(true)
     }
     
     @objc internal func keyboardWillShow(notification: Notification) {
-        self.centerAuthViewAnchor?.isActive = false
-        self.topAuthViewAnchor?.isActive = true
         
+        //Height of the keyboard
+        guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
+            { return }
+        
+        //Calculate the center of the availabel space between the top of the keyboard to the top of the view
+        let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
+        self.centerAuthViewAnchor?.constant -= availableSpace
+        
+                
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
         }, completion: nil)
     }
     
     @objc internal func keyboardWillHide(notification: Notification) {
-        self.centerAuthViewAnchor?.isActive = true
-        self.topAuthViewAnchor?.isActive = false
+        //Height of the keyboard
+        guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
+        { return }
+        
+        //Calculate the center of the availabel space between the top of the keyboard to the top of the view
+        let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
+        self.centerAuthViewAnchor?.constant += availableSpace
         
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
