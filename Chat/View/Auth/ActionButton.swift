@@ -17,6 +17,7 @@ class ActionButton: UIButton {
         self.setTitle("Sign In!", for: .normal)
         self.setTitleColor(.white, for: .normal)
         self.layer.cornerRadius = 10
+        self.titleLabel?.font = UIFont.boldSystemFont(ofSize: 20)
         self.backgroundColor = UIColor(red: 255/255, green: 87/255, blue: 34/255, alpha: 1)
         self.translatesAutoresizingMaskIntoConstraints = false
         
