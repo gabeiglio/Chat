@@ -11,36 +11,17 @@ import FirebaseAuth
 import FirebaseStorage
 import FirebaseDatabase
 
-extension AuthErrorCode: Error {
-    var errorMessage: String {
-        switch self {
-        case .emailAlreadyInUse:
-            return "The email is already in use with another account"
-        case .userNotFound:
-            return "Account not found for the specified user. Please check and try again"
-        case .userDisabled:
-            return "Your account has been disabled. Please contact support."
-        case .invalidEmail, .invalidSender, .invalidRecipientEmail:
-            return "Please enter a valid email"
-        case .networkError:
-            return "Network error. Please try again."
-        case .weakPassword:
-            return "Your password is too weak. The password must be 6 characters long or more."
-        case .wrongPassword:
-            return "Your password is incorrect. Please try again or use 'Forgot password' to reset your password"
-        case .internalError:
-            return "An error has acourred, please try again later"
-        default:
-            return "Unknown error occurred"
-        }
-    }
-}
-
-enum DatabaseError: Error {
-    case error
-}
-
 struct Network {
+    
+    static public var isUserLoggedIn: Bool = {
+        if Auth.auth().currentUser != nil { return true}
+        return false
+    }()
+    
+    static public var userId: String? = {
+        guard let id = Auth.auth().currentUser?.uid else { return nil }
+        return id
+    }()
         
     //Mark: Auth services
     static public func signInToAccount(email: String, password: String, completion: @escaping (Result<String,AuthErrorCode>) -> Void) {
@@ -69,15 +50,35 @@ struct Network {
             guard let id = result?.user.uid else { return completion(.failure(.internalError)) }
             
             //Store information in database
-            Database.database().reference().child("users").child(id).setValue(["name": name, "email": email])
+            Database.database().reference().child("users").child(id).setValue(["name": name, "email": email, "profile_pic": ""])
             completion(.success(id))
         }
     }
     
+    static public func logOutOfCurrentUser(completion: @escaping (Error?) -> Void) {
+        do {
+            try Auth.auth().signOut()
+            completion(nil)
+        } catch let error { completion(error) }
+    }
+    
     //Mark: Database services
-    static public func updateUser(id: String, with values: [String: Any]) {
+    static public func updateUserData(id: String, with values: [String: Any]) {
         let path = Database.database().reference().child("users").child(id)
         path.updateChildValues(values)
+    }
+    
+    static public func retreiveUserData(id: String, completion: @escaping (Result<User,DatabaseError>) -> Void) {
+        Database.database().reference().child("users").child(id).observeSingleEvent(of: .value) { (snapshot) in
+            guard let dict = snapshot.value as? [String: AnyObject] else { return completion(.failure(.error)) }
+            
+            //Unwrap values from snapshot dict
+            guard let name = dict["name"] as? String, let email = dict["email"] as? String, let profilePic = dict["profile_pic"] as? String else { return completion(.failure(.error))
+            }
+            
+            //Return succes with user attached
+            return completion(.success(User(id: id, name: name, email: email, profilePic: profilePic)))
+        }
     }
     
     
