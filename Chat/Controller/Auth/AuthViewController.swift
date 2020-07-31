@@ -22,9 +22,9 @@ class AuthViewController: UIViewController {
     private let authView = AuthDynamicView()
     
     //Authview anchor
+    private var topAuthViewAnchor: NSLayoutConstraint?
     private var centerAuthViewAnchor: NSLayoutConstraint?
     private var heightAuthViewAnchor: NSLayoutConstraint?
-    private var centerAuthViewAnchorKeyboard: NSLayoutConstraint?
     
     //State of keyboard being shown
     private var isKeyboardOut = false
@@ -70,13 +70,31 @@ class AuthViewController: UIViewController {
 extension AuthViewController {
     private func signIn(email: String, password: String) {
         Network.signInToAccount(email: email, password: password) { (result) in
-            //Transition and pass user to other view
+            
+            switch result {
+            case .success(let id):
+                print(id)
+                self.present(MainViewController(), animated: true) {
+                    
+                }
+            case .failure(let error): print(error.localizedDescription)
+            }
+            
         }
     }
     
     private func createAccount(name: String, email: String, password: String) {
         Network.createAccount(name: name, email: email, password: password) { (result) in
-            //Transition and pass user to other view
+            
+            switch result {
+            case .success(let id):
+                print(id)
+                self.present(MainViewController(), animated: true) {
+                    
+                }
+            case .failure(let error): print(error.localizedDescription)
+            }
+            
         }
     }
 }
@@ -122,6 +140,10 @@ extension AuthViewController {
         self.centerAuthViewAnchor = self.authView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor)
         self.centerAuthViewAnchor?.isActive = true
         
+        //Top anchor
+        self.topAuthViewAnchor = self.authView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 80)
+        self.topAuthViewAnchor?.isActive = false
+        
         //Height anchor
         self.heightAuthViewAnchor = self.authView.heightAnchor.constraint(equalToConstant: (self.view.frame.height / 3) - (self.view.frame.height / 3) / 3)
         self.heightAuthViewAnchor?.isActive = true
@@ -162,15 +184,9 @@ extension AuthViewController {
     @objc internal func keyboardWillShow(notification: Notification) {
         if isKeyboardOut == true { return }
         
-        //Height of the keyboard
-        guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
-            { return }
+        self.centerAuthViewAnchor?.isActive = false
+        self.topAuthViewAnchor?.isActive = true
         
-        //Calculate the center of the availabe space between the top of the keyboard to the top of the view (some weird teaking also)
-        let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
-        self.centerAuthViewAnchor?.constant -= availableSpace
-        
-                
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
         }, completion: nil)
@@ -181,13 +197,8 @@ extension AuthViewController {
     @objc internal func keyboardWillHide(notification: Notification) {
         if isKeyboardOut == false { return }
         
-        //Height of the keyboard
-        guard let kHeight = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue.height else
-        { return }
-        
-        //Calculate the center of the availabel space between the top of the keyboard to the top of the view (some weird teaking also)
-        let availableSpace = ((self.view.frame.height / 1.5) - kHeight) / 2
-        self.centerAuthViewAnchor?.constant += availableSpace
+        self.centerAuthViewAnchor?.isActive = true
+        self.topAuthViewAnchor?.isActive = false
         
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut, animations: {
             self.view.layoutIfNeeded()
