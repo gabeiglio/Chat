@@ -9,6 +9,7 @@
 import Foundation
 
 struct Chat {
+    let id: String
     let sender: String
     let receiver: String
     let payload: String
