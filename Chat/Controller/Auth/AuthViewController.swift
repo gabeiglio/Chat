@@ -32,6 +32,9 @@ class AuthViewController: UIViewController {
     //State of the auth
     private var authState = AuthState.signIn
     
+    //Reference to main view controller
+    public var mainViewController: MainViewController?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -64,6 +67,28 @@ class AuthViewController: UIViewController {
             
         } catch let error { print(error.localizedDescription) }
     }
+    
+    //Show an alert view with a custom title and error message
+    private func showError(with title: String, error: String) {
+        let alert = UIAlertController(title: title, message: error, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Dismiss", style: .cancel, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    private func authCompletedSuccesfully(id: String) {
+        //Get user and feed it to main view controller
+        Network.retreiveUserData(id: id) { (result) in
+            switch result {
+            case .success(let user):
+                self.mainViewController?.user = user
+                self.dismiss(animated: true) {
+                    //like stop an activity indicator?
+                }
+                
+            case .failure(let error): self.showError(with: "Error", error: error.localizedDescription)
+            }
+        }
+    }
 }
 
 //Handle auth logic
@@ -72,12 +97,8 @@ extension AuthViewController {
         Network.signInToAccount(email: email, password: password) { (result) in
             
             switch result {
-            case .success(let id):
-                print(id)
-                self.present(MainViewController(), animated: true) {
-                    
-                }
-            case .failure(let error): print(error.localizedDescription)
+            case .success(let id): self.authCompletedSuccesfully(id: id)
+            case .failure(let error): self.showError(with: "Error", error: error.errorMessage)
             }
             
         }
@@ -85,16 +106,10 @@ extension AuthViewController {
     
     private func createAccount(name: String, email: String, password: String) {
         Network.createAccount(name: name, email: email, password: password) { (result) in
-            
             switch result {
-            case .success(let id):
-                print(id)
-                self.present(MainViewController(), animated: true) {
-                    
-                }
-            case .failure(let error): print(error.localizedDescription)
+            case .success(let id): self.authCompletedSuccesfully(id: id)
+            case .failure(let error): self.showError(with: "Error", error: error.errorMessage)
             }
-            
         }
     }
 }
@@ -130,6 +145,7 @@ extension AuthViewController {
     private func setupView() {
         
         //Self
+        self.isModalInPresentation = true
         self.view.backgroundColor = .systemGroupedBackground
         self.view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTapBackgroundView)))
         
