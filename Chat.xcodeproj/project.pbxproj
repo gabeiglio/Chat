@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		005524AE24D20C7E006F7837 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005524AD24D20C7E006F7837 /* User.swift */; };
 		005524B024D20CA6006F7837 /* Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005524AF24D20CA6006F7837 /* Chat.swift */; };
+		006CADA024D49DAB00444E17 /* ProfileImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006CAD9F24D49DAB00444E17 /* ProfileImageView.swift */; };
+		006CADA324D52B1700444E17 /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006CADA224D52B1700444E17 /* ImagePicker.swift */; };
 		0085344B24D1F005007140B0 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0085344A24D1F004007140B0 /* GoogleService-Info.plist */; };
 		008EACD724D084770029B9DC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008EACD624D084770029B9DC /* AppDelegate.swift */; };
 		008EACD924D084770029B9DC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 008EACD824D084770029B9DC /* SceneDelegate.swift */; };
@@ -28,6 +30,8 @@
 /* Begin PBXFileReference section */
 		005524AD24D20C7E006F7837 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		005524AF24D20CA6006F7837 /* Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chat.swift; sourceTree = "<group>"; };
+		006CAD9F24D49DAB00444E17 /* ProfileImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImageView.swift; sourceTree = "<group>"; };
+		006CADA224D52B1700444E17 /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		0085344A24D1F004007140B0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "../../../../../../Downloads/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		008EACD324D084770029B9DC /* Chat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chat.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		008EACD624D084770029B9DC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -60,6 +64,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		006CADA124D52AF500444E17 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				006CADA224D52B1700444E17 /* ImagePicker.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 		008EACCA24D084770029B9DC = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +99,7 @@
 				008EACEB24D084AB0029B9DC /* View */,
 				008EACEA24D084A60029B9DC /* Controller */,
 				00EC495224D1F94B002F6F25 /* Network */,
+				006CADA124D52AF500444E17 /* Helpers */,
 				008EACED24D084C70029B9DC /* Util */,
 			);
 			path = Chat;
@@ -134,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				00A06EB724D4869800C2536E /* InfoBarView.swift */,
+				006CAD9F24D49DAB00444E17 /* ProfileImageView.swift */,
 			);
 			path = "Navigation Bar";
 			sourceTree = "<group>";
@@ -300,7 +314,9 @@
 				00A06EB824D4869800C2536E /* InfoBarView.swift in Sources */,
 				00EC495424D1F979002F6F25 /* Network.swift in Sources */,
 				00EC494E24D1F44A002F6F25 /* AuthViewController.swift in Sources */,
+				006CADA324D52B1700444E17 /* ImagePicker.swift in Sources */,
 				005524B024D20CA6006F7837 /* Chat.swift in Sources */,
+				006CADA024D49DAB00444E17 /* ProfileImageView.swift in Sources */,
 				005524AE24D20C7E006F7837 /* User.swift in Sources */,
 				00A06EB424D4640B00C2536E /* NetworkErrorMessages.swift in Sources */,
 				00AED98F24D2388300A2C5AC /* SlidingButton.swift in Sources */,
