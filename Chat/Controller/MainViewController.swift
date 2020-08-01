@@ -12,36 +12,43 @@ class MainViewController: UIViewController {
     
     //Prperty of current user signed in
     public var user: User!
-    
-    //Porfile image
-    private let profileImage = UIImageView()
+    private var imagePicker: ImagePicker!
+    private let profileImage = ProfileImageView(image: nil)
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //While we wait for the data to download
+        //Show placeholder view while data downloads
         self.setupPlaceholderView()
         
         //Important code to get the user data
         self.handleUserAuthDataRetreive {
-            //Data already downloaded
             self.setupView()
         }
     }
     
+    @objc private func didTapProfileImageView() {
+        self.imagePicker.present(from: self.profileImage)
+    }
+    
+}
+
+//Handle authentication cases
+extension MainViewController {
+    
     //This method will check for the current user auth and data,
     //it will show the auth controller if no user or download the data
     private func handleUserAuthDataRetreive(completion: @escaping () -> Void) {
-        if Network.isUserLoggedIn == true {
-            Network.retreiveUserData(id: Network.userId!) { (result) in
-                switch result {
-                case .success(let user): self.user = user
-                case .failure(let error): print(error)
-                }
-                
-                completion()
+        guard Network.isUserLoggedIn == true else { return self.showAuthViewController() }
+        
+        Network.retreiveUserData(id: Network.userId!) { (result) in
+            switch result {
+            case .success(let user): self.user = user
+            case .failure(let error): print(error)
             }
-        } else { self.showAuthViewController() }
+            
+            completion()
+        }
     }
     
     //Show Auth View Controller as a sheet
@@ -51,6 +58,25 @@ class MainViewController: UIViewController {
         self.present(authViewController, animated: true, completion: nil)
     }
     
+    @objc private func logOut() {
+        Network.logOutOfCurrentUser { (error) in
+            if error != nil { return print(error!.localizedDescription) }
+            self.showAuthViewController()
+        }
+    }
+}
+
+//Handle the image picker delegate method
+extension MainViewController: ImagePickerDelegate {
+    internal func didSelect(image: UIImage?) {
+        guard let compressedImage = image?.jpegData(compressionQuality: 0.25) else { return }
+        
+        Network.updateUserProfilePhoto(id: self.user.id, image: compressedImage, imageId: self.user.id) { (error) in
+            guard error == nil else { return print(error!.localizedDescription) }
+            
+            self.profileImage.image = image
+        }
+    }
 }
 
 extension MainViewController {
@@ -59,60 +85,41 @@ extension MainViewController {
     private func setupPlaceholderView() {
         
         //Self
-        self.view.backgroundColor = .white
+        self.view.backgroundColor = .systemGroupedBackground
         
-        //Navigation
+        //Navigation bar
+        guard let navigationBar = self.navigationController?.navigationBar else { return }
+
+        //profile image for nav bar
+        navigationBar.addSubview(self.profileImage)
+        NSLayoutConstraint.activate([
+            profileImage.leftAnchor.constraint(equalTo: navigationBar.leftAnchor, constant: ProfileImageView.Const.ImageRightMargin),
+            profileImage.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor, constant: -ProfileImageView.Const.ImageBottomMarginForSmallState),
+            profileImage.heightAnchor.constraint(equalToConstant: ProfileImageView.Const.ImageSizeForSmallState),
+            profileImage.widthAnchor.constraint(equalTo: self.profileImage.heightAnchor)
+        ])
+        
+        
     }
     
     private func setupView() {
         
         //Navigation
         self.navigationItem.title = self.user.name
-        self.setupProfileImage()
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: "􀍟", style: .plain, target: self, action: #selector(self.logOut))
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: #selector(self.logOut))
         
-    }
-    
-    @objc private func logOut() {
-        Network.logOutOfCurrentUser { (error) in
-            if error != nil { return print(error?.localizedDescription) }
-            self.showAuthViewController()
+        //setup profile image gesture recognizer
+        self.profileImage.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTapProfileImageView)))
+        
+        Network.retreiveDataFromStorage(path: "profile_pic/\(self.user.id).jpeg") { (result) in
+            switch result {
+            case .success(let data): self.profileImage.image = UIImage(data: data)
+            case .failure(let error): print(error.localizedDescription)
+            }
         }
-    }
-    
-    private func setupProfileImage() {
-        profileImage.backgroundColor = .blue
         
-        guard let navigationBar = self.navigationController?.navigationBar else { return }
+        //Initialize picker view
+        self.imagePicker = ImagePicker(presentationController: self, delegate: self)
         
-        //navigationBar.addSubview(profileImage)
-        navigationBar.addSubview(self.profileImage)
-        
-        profileImage.layer.cornerRadius = Const.ImageSizeForLargeState / 2
-        profileImage.clipsToBounds = true
-        profileImage.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            profileImage.leftAnchor.constraint(equalTo: navigationBar.leftAnchor, constant: Const.ImageRightMargin),
-            profileImage.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor, constant: -Const.ImageBottomMarginForSmallState),
-            profileImage.heightAnchor.constraint(equalToConstant: Const.ImageSizeForLargeState),
-            profileImage.widthAnchor.constraint(equalTo: profileImage.heightAnchor)
-            ])
-    }
-    
-    private struct Const {
-        /// Image height/width for Large NavBar state
-        static let ImageSizeForLargeState: CGFloat = 40
-        /// Margin from right anchor of safe area to right anchor of Image
-        static let ImageRightMargin: CGFloat = 16
-        /// Margin from bottom anchor of NavBar to bottom anchor of Image for Large NavBar state
-        static let ImageBottomMarginForLargeState: CGFloat = 12
-        /// Margin from bottom anchor of NavBar to bottom anchor of Image for Small NavBar state
-        static let ImageBottomMarginForSmallState: CGFloat = 6
-        /// Image height/width for Small NavBar state
-        static let ImageSizeForSmallState: CGFloat = 32
-        /// Height of NavBar for Small state. Usually it's just 44
-        static let NavBarHeightSmallState: CGFloat = 44
-        /// Height of NavBar for Large state. Usually it's just 96.5 but if you have a custom font for the title, please make sure to edit this value since it changes the height for Large state of NavBar
-        static let NavBarHeightLargeState: CGFloat = 96.5
     }
 }
