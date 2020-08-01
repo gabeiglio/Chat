@@ -81,5 +81,29 @@ struct Network {
         }
     }
     
+    static public func updateUserProfilePhoto(id: String, image: Data, imageId: String, completion: @escaping (DatabaseError?) -> Void) {
+        Network.uploadDataToStorage(name: imageId, data: image, type: "jpeg") { (error) in
+            guard error == nil else { return completion(.error) }
+            
+            Network.updateUserData(id: id, with: ["profile_pic": imageId])
+            completion(nil)
+        }
+    }
+    
+    //Mark: Storage services
+    static public func uploadDataToStorage(name: String, data: Data, type: String, completion: @escaping (StorageError?) -> Void) {
+        Storage.storage().reference().child("profile_pic").child("\(name).\(type)").putData(data, metadata: nil) { (metadata, error) in
+            guard let _ = metadata else { return completion(.error) }
+            completion(nil)
+        }
+    }
+    
+    static public func retreiveDataFromStorage(path: String, completion: @escaping (Result<Data,StorageError>) -> Void) {
+        Storage.storage().reference().child(path).getData(maxSize: 1 * 1024 * 1024) { (data, error) in
+            guard error == nil, let final = data else { return completion(.failure(.error)) }
+            completion(.success(final))
+        }
+    }
+    
     
 }
