@@ -36,3 +36,7 @@ extension AuthErrorCode: Error {
 enum DatabaseError: Error {
     case error
 }
+
+enum StorageError: Error {
+    case error
+}
