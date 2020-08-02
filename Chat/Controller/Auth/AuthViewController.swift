@@ -83,6 +83,7 @@ class AuthViewController: UIViewController {
                 self.mainViewController?.user = user
                 self.dismiss(animated: true) {
                     //like stop an activity indicator?
+                    self.mainViewController?.loadCurrentUserData()
                 }
                 
             case .failure(let error): self.showError(with: "Error", error: error.localizedDescription)
