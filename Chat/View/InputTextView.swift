@@ -1,5 +1,5 @@
 //
-//  InputTextMessage.swift
+//  InputTextView.swift
 //  Chat
 //
 //  Created by Gabriel Igliozzi on 8/1/20.
@@ -8,7 +8,12 @@
 
 import UIKit
 
-class InputTextMessage: UIView {
+protocol InputTextViewDelegate {
+    func didTapSendButton(text: String)
+    func textViewDidChangeHeight(height: CGFloat)
+}
+
+class InputTextView: UIView {
     
     private let separatorView: UIView = {
         let view = UIView()
@@ -17,9 +22,10 @@ class InputTextMessage: UIView {
         return view
     }()
     
-    private let inputTextfield: UITextField = {
-        let field = UITextField()
-        field.placeholder = "Write a message"
+    private let inputTextview: UITextView = {
+        let field = UITextView()
+        field.font = UIFont.systemFont(ofSize: 16)
+        field.showsHorizontalScrollIndicator = false
         field.translatesAutoresizingMaskIntoConstraints = false
         return field
     }()
@@ -27,18 +33,29 @@ class InputTextMessage: UIView {
     private let sendButton: UIButton = {
         let button = UIButton()
         button.setImage(UIImage(systemName: "paperplane.fill"), for: .normal)
-        button.tintColor = .white
+        button.tintColor = UIColor(red: 255/255, green: 87/255, blue: 34/255, alpha: 1)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.layer.cornerRadius = 20 / 2
-        button.backgroundColor = UIColor(red: 255/255, green: 87/255, blue: 34/255, alpha: 1)
         return button
     }()
+    
+    private let moreButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "plus"), for: .normal)
+        button.tintColor = UIColor(red: 255/255, green: 87/255, blue: 34/255, alpha: 1)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    public var delegate: InputTextViewDelegate?
+    private var previousRect = CGRect.zero
+    private var heightChangeCount = 0
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         //Self
         self.translatesAutoresizingMaskIntoConstraints = false
+        self.inputTextview.delegate = self
         
         //Setup separator view
         self.addSubview(self.separatorView)
@@ -49,13 +66,22 @@ class InputTextMessage: UIView {
             self.separatorView.heightAnchor.constraint(equalToConstant: 0.5)
         ])
         
-        //Setup input textfield
-        self.addSubview(self.inputTextfield)
+        //Setup plus button
+        self.addSubview(self.moreButton)
         NSLayoutConstraint.activate([
-            self.inputTextfield.leftAnchor.constraint(equalTo: self.leftAnchor),
-            self.inputTextfield.topAnchor.constraint(equalTo: self.topAnchor),
-            self.inputTextfield.bottomAnchor.constraint(equalTo: self.bottomAnchor),
-            self.inputTextfield.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -40)
+            self.moreButton.leftAnchor.constraint(equalTo: self.leftAnchor, constant: 10),
+            self.moreButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            self.moreButton.heightAnchor.constraint(equalToConstant: 40),
+            self.moreButton.widthAnchor.constraint(equalToConstant: 40)
+        ])
+        
+        //Setup input textfield
+        self.addSubview(self.inputTextview)
+        NSLayoutConstraint.activate([
+            self.inputTextview.leftAnchor.constraint(equalTo: self.moreButton.rightAnchor, constant: 5),
+            self.inputTextview.topAnchor.constraint(equalTo: self.topAnchor, constant: 5),
+            self.inputTextview.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -5),
+            self.inputTextview.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -40)
         ])
         
         //Setup send button
@@ -63,8 +89,8 @@ class InputTextMessage: UIView {
         NSLayoutConstraint.activate([
             self.sendButton.centerYAnchor.constraint(equalTo: self.centerYAnchor),
             self.sendButton.rightAnchor.constraint(equalTo: self.rightAnchor, constant: -5),
-            self.sendButton.heightAnchor.constraint(equalToConstant: 20),
-            self.sendButton.widthAnchor.constraint(equalToConstant: 20)
+            self.sendButton.heightAnchor.constraint(equalToConstant: 40),
+            self.sendButton.widthAnchor.constraint(equalToConstant: 40)
         ])
         
     }
@@ -73,4 +99,26 @@ class InputTextMessage: UIView {
         super.init(coder: coder)
     }
     
+}
+
+extension InputTextView: UITextViewDelegate {
+    internal func textViewDidChange(_ textView: UITextView) {
+        
+        let currentRect = textView.caretRect(for: textView.endOfDocument)
+        
+        if currentRect.origin.y > previousRect.origin.y {
+            if self.heightChangeCount >= 4 { return }
+            
+            if self.heightChangeCount == 0 {
+                self.delegate?.textViewDidChangeHeight(height: 16)
+            }
+            
+            self.heightChangeCount += 1
+        } else if  currentRect.origin.y < previousRect.origin.y {
+            self.delegate?.textViewDidChangeHeight(height: -16)
+            self.heightChangeCount -= 1
+        }
+        
+        self.previousRect = currentRect
+    }
 }
