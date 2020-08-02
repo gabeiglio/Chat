@@ -10,20 +10,31 @@ import UIKit
 
 class MainViewController: UIViewController {
     
-    //Prperty of current user signed in
+    //Current user signed in
     public var user: User!
     private var imagePicker: ImagePicker!
     private let profileImage = ProfileImageView(image: nil)
+    private let newMessageButton = FloatingButton(type: .system)
+    
+    private let tableView = UITableView()
+    private var dataSource: UITableViewDiffableDataSource<Section, Chat>!
+    
+    public var chats = [Chat]()
+    
+    //Sections
+    private enum Section {
+        case main
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         //Show placeholder view while data downloads
-        self.setupPlaceholderView()
+        self.setupView()
         
         //Important code to get the user data
         self.handleUserAuthDataRetreive {
-            self.setupView()
+            self.loadCurrentUserData()
         }
     }
     
@@ -31,14 +42,18 @@ class MainViewController: UIViewController {
         self.imagePicker.present(from: self.profileImage)
     }
     
+    @objc private func didTapNewMessageButton() {
+        let contactsController = ContactsTableViewController()
+        contactsController.mainViewController = self
+        self.present(UINavigationController(rootViewController: contactsController), animated: true, completion: nil)
+    }
 }
 
-//Handle authentication cases
 extension MainViewController {
     
     //This method will check for the current user auth and data,
     //it will show the auth controller if no user or download the data
-    private func handleUserAuthDataRetreive(completion: @escaping () -> Void) {
+    public func handleUserAuthDataRetreive(completion: @escaping () -> Void) {
         guard Network.isUserLoggedIn == true else { return self.showAuthViewController() }
         
         Network.retreiveUserData(id: Network.userId!) { (result) in
@@ -61,7 +76,104 @@ extension MainViewController {
     @objc private func logOut() {
         Network.logOutOfCurrentUser { (error) in
             if error != nil { return print(error!.localizedDescription) }
+            
+            //Clear all data from user
+            self.user = nil
+            self.chats = [Chat]()
+            
+            //Clean user interface
+            self.profileImage.image = nil
+            
+            //Wipe datasource
+            self.createSnapshot(from: [], completion: nil)
+            
+            //Final step
             self.showAuthViewController()
+        }
+    }
+    
+    public func loadCurrentUserData() {
+                
+        //Profile image view
+        Network.retreiveDataFromStorage(path: "profile_pic/\(self.user.id).jpeg") { (result) in
+            switch result {
+            case .success(let data): self.profileImage.image = UIImage(data: data)
+            case .failure(let error): print(error.localizedDescription)
+            }
+        }
+        
+        //Here we download all the chats of the current user
+    }
+    
+    public func createNewChat(to user: User) {
+                
+        for item in self.chats {
+            if item.friend.id == user.id {
+                return //chat already exist no need to create a new chat, open respective char
+            }
+        }
+        
+        self.chats.append(Chat(friend: user, messages: []))
+        self.createSnapshot(from: self.chats) {
+            let messageController = ChatViewController()
+            messageController.navigationItem.title = user.name
+            messageController.modalPresentationStyle = .fullScreen
+            self.navigationController?.show(messageController, sender: nil)
+        }
+    }
+
+    
+}
+
+//Handle tableview delegate and datasource methods
+extension MainViewController: UITableViewDelegate  {
+    
+    internal func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 80
+    }
+    
+    internal func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let messageController = ChatViewController()
+        messageController.navigationItem.title = self.chats[indexPath.row].friend.name
+        messageController.modalPresentationStyle = .fullScreen
+        self.navigationController?.show(messageController, sender: nil)
+    }
+    
+    internal func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        return nil
+    }
+    
+    private func configureDataSource() {
+        self.dataSource = UITableViewDiffableDataSource<Section, Chat>(tableView: self.tableView, cellProvider: { (tableView, indexPath, chat) -> UITableViewCell? in
+            
+            guard let cell = self.tableView.dequeueReusableCell(withIdentifier: "chatCell") as? ChatTableViewCell
+                else { return UITableViewCell() }
+            
+            //Get the friend user data
+            Network.retreiveUserData(id: chat.friend.id) { (result) in
+                switch result {
+                case .success(let user):
+                    Network.retreiveDataFromStorage(path: "profile_pic/\(user.id).jpeg") { (result) in
+                        switch result {
+                        case .success(let data): cell.setupCell(image: UIImage(data: data), name: user.name, preview: "")
+                        case .failure(_): cell.setupCell(image: nil, name: user.name, preview: "")
+                        }
+                    }
+                case .failure(let error): print(error.localizedDescription)
+                }
+            }
+            return cell
+        })
+    }
+    
+    private func createSnapshot(from chats: [Chat], completion: (() -> Void)?) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Chat>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(chats)
+        dataSource.apply(snapshot, animatingDifferences: true) {
+            if completion != nil {
+                completion!()
+            }
         }
     }
 }
@@ -73,7 +185,6 @@ extension MainViewController: ImagePickerDelegate {
         
         Network.updateUserProfilePhoto(id: self.user.id, image: compressedImage, imageId: self.user.id) { (error) in
             guard error == nil else { return print(error!.localizedDescription) }
-            
             self.profileImage.image = image
         }
     }
@@ -81,45 +192,71 @@ extension MainViewController: ImagePickerDelegate {
 
 extension MainViewController {
     
-    //Method to configure the view while the data has not been yet downloaded
-    private func setupPlaceholderView() {
+    public func setupView() {
         
         //Self
-        self.view.backgroundColor = .systemGroupedBackground
+        self.view.backgroundColor = .white
         
         //Navigation bar
-        guard let navigationBar = self.navigationController?.navigationBar else { return }
-
-        //profile image for nav bar
-        navigationBar.addSubview(self.profileImage)
+        self.navigationItem.title = "Chat"
+        self.navigationController?.navigationBar.prefersLargeTitles = true
+        
+        //navigation right bar button item
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: #selector(self.logOut))
+        
+        let wrapper = UIView(frame: CGRect(x: 0, y: 0, width: 32, height: 32))
+        wrapper.clipsToBounds = true
+        wrapper.translatesAutoresizingMaskIntoConstraints = false
+        
         NSLayoutConstraint.activate([
-            profileImage.leftAnchor.constraint(equalTo: navigationBar.leftAnchor, constant: ProfileImageView.Const.ImageRightMargin),
-            profileImage.bottomAnchor.constraint(equalTo: navigationBar.bottomAnchor, constant: -ProfileImageView.Const.ImageBottomMarginForSmallState),
-            profileImage.heightAnchor.constraint(equalToConstant: ProfileImageView.Const.ImageSizeForSmallState),
-            profileImage.widthAnchor.constraint(equalTo: self.profileImage.heightAnchor)
+            wrapper.heightAnchor.constraint(equalToConstant: 32),
+            wrapper.widthAnchor.constraint(equalToConstant: 32)
         ])
         
+        wrapper.addSubview(self.profileImage)
+        NSLayoutConstraint.activate([
+            self.profileImage.leftAnchor.constraint(equalTo: wrapper.leftAnchor),
+            self.profileImage.rightAnchor.constraint(equalTo: wrapper.rightAnchor),
+            self.profileImage.topAnchor.constraint(equalTo: wrapper.topAnchor),
+            self.profileImage.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor)
+        ])
         
-    }
-    
-    private func setupView() {
-        
-        //Navigation
-        self.navigationItem.title = self.user.name
-        self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "gear"), style: .plain, target: self, action: #selector(self.logOut))
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: wrapper)
         
         //setup profile image gesture recognizer
         self.profileImage.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(self.didTapProfileImageView)))
         
-        Network.retreiveDataFromStorage(path: "profile_pic/\(self.user.id).jpeg") { (result) in
-            switch result {
-            case .success(let data): self.profileImage.image = UIImage(data: data)
-            case .failure(let error): print(error.localizedDescription)
-            }
-        }
-        
         //Initialize picker view
         self.imagePicker = ImagePicker(presentationController: self, delegate: self)
         
+        //Setup tableview
+        self.tableView.delegate = self
+        self.tableView.separatorStyle = .none
+        self.tableView.backgroundColor = .clear
+        self.tableView.translatesAutoresizingMaskIntoConstraints = false
+        self.tableView.register(ChatTableViewCell.self, forCellReuseIdentifier: "chatCell")
+        self.view.addSubview(self.tableView)
+        
+        NSLayoutConstraint.activate([
+            self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            self.tableView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            self.tableView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            self.tableView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
+        ])
+        
+        //Setup new message button
+        self.view.addSubview(self.newMessageButton)
+        NSLayoutConstraint.activate([
+            self.newMessageButton.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
+            self.newMessageButton.rightAnchor.constraint(equalTo: self.view.rightAnchor, constant: -30),
+            self.newMessageButton.heightAnchor.constraint(equalToConstant: 60),
+            self.newMessageButton.widthAnchor.constraint(equalToConstant: 60)
+        ])
+        
+        self.newMessageButton.addTarget(self, action: #selector(self.didTapNewMessageButton), for: .touchUpInside)
+        
+        //Data source
+        self.configureDataSource()
+    
     }
 }
