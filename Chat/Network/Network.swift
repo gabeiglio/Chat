@@ -63,6 +63,27 @@ struct Network {
     }
     
     //Mark: Database services
+    static public func retreiveAllUserData(completion: @escaping (Result<[User], DatabaseError>) -> Void) {
+        Database.database().reference().child("users").observeSingleEvent(of: .value) { (snapshot) in
+            guard let dict = snapshot.value as? [String: AnyObject] else {
+                return completion(.failure(.error))
+            }
+            
+            var users = [User]()
+            
+            for (key, value) in dict {
+                guard let val = value as? [String: AnyObject] else { return completion(.failure(.error)) }
+                guard let name = val["name"] as? String, let email = val["email"] as? String, let profilePic = val["profile_pic"] as? String else {
+                    return completion(.failure(.error))
+                }
+                
+                users.append(User(id: key, name: name, email: email, profilePic: profilePic))
+            }
+            
+            completion(.success(users))
+        }
+    }
+    
     static public func updateUserData(id: String, with values: [String: Any]) {
         let path = Database.database().reference().child("users").child(id)
         path.updateChildValues(values)
