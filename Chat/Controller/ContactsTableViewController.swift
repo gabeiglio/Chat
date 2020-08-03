@@ -88,6 +88,10 @@ extension ContactsTableViewController {
 //Implement delegate methods
 extension ContactsTableViewController {
     
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 50
+    }
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let user = self.users[indexPath.row]
         self.dismiss(animated: true) {
