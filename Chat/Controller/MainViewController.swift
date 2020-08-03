@@ -106,6 +106,12 @@ extension MainViewController {
     }
     
     public func createNewChat(to user: User) {
+        
+        let messageController = ChatViewController()
+        messageController.sender = self.user
+        messageController.receiver = user
+        messageController.navigationItem.title = user.name
+        messageController.modalPresentationStyle = .fullScreen
                 
         for item in self.chats {
             if item.friend.id == user.id {
@@ -115,9 +121,6 @@ extension MainViewController {
         
         self.chats.append(Chat(friend: user, messages: []))
         self.createSnapshot(from: self.chats) {
-            let messageController = ChatViewController()
-            messageController.navigationItem.title = user.name
-            messageController.modalPresentationStyle = .fullScreen
             self.navigationController?.show(messageController, sender: nil)
         }
     }
@@ -162,6 +165,7 @@ extension MainViewController: UITableViewDelegate  {
                 case .failure(let error): print(error.localizedDescription)
                 }
             }
+            
             return cell
         })
     }
