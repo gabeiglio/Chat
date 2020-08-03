@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		001A597724D70D4400F4726B /* MessagesCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 001A597624D70D4400F4726B /* MessagesCollectionViewCell.swift */; };
 		005524AE24D20C7E006F7837 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005524AD24D20C7E006F7837 /* User.swift */; };
 		005524B024D20CA6006F7837 /* Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 005524AF24D20CA6006F7837 /* Chat.swift */; };
 		006CADA024D49DAB00444E17 /* ProfileImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006CAD9F24D49DAB00444E17 /* ProfileImageView.swift */; };
@@ -35,6 +36,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		001A597624D70D4400F4726B /* MessagesCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesCollectionViewCell.swift; sourceTree = "<group>"; };
 		005524AD24D20C7E006F7837 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		005524AF24D20CA6006F7837 /* Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chat.swift; sourceTree = "<group>"; };
 		006CAD9F24D49DAB00444E17 /* ProfileImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileImageView.swift; sourceTree = "<group>"; };
@@ -78,6 +80,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		001A597524D70D2700F4726B /* Messages Cell */ = {
+			isa = PBXGroup;
+			children = (
+				001A597624D70D4400F4726B /* MessagesCollectionViewCell.swift */,
+			);
+			path = "Messages Cell";
+			sourceTree = "<group>";
+		};
 		006CADA124D52AF500444E17 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -137,6 +147,7 @@
 				006CADA524D534D500444E17 /* ChatTableViewCell.swift */,
 				00F20DE224D5C3EB0058BD6A /* FloatingButton.swift */,
 				00E256B524D6346B0043318C /* InputTextView.swift */,
+				001A597524D70D2700F4726B /* Messages Cell */,
 				00A06EB524D4866B00C2536E /* Navigation Bar */,
 				00EC494F24D1F4B5002F6F25 /* Auth */,
 			);
@@ -332,6 +343,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				001A597724D70D4400F4726B /* MessagesCollectionViewCell.swift in Sources */,
 				00A06EB824D4869800C2536E /* InfoBarView.swift in Sources */,
 				00EC495424D1F979002F6F25 /* Network.swift in Sources */,
 				00EC494E24D1F44A002F6F25 /* AuthViewController.swift in Sources */,
