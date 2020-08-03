@@ -10,6 +10,7 @@ import UIKit
 
 protocol InputTextViewDelegate {
     func didTapSendButton(text: String)
+    func didTapMoreButton()
     func textViewDidChangeHeight(height: CGFloat)
 }
 
@@ -93,10 +94,27 @@ class InputTextView: UIView {
             self.sendButton.widthAnchor.constraint(equalToConstant: 40)
         ])
         
+        //Targets
+        self.sendButton.addTarget(self, action: #selector(self.didTapSendButton), for: .touchUpInside)
+        self.moreButton.addTarget(self, action: #selector(self.didTapMoreButton), for: .touchUpInside)
+        
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    @objc private func didTapSendButton() {
+        guard let text = self.inputTextview.text else { return }
+        self.delegate?.didTapSendButton(text: text)
+        
+        self.previousRect = CGRect.zero
+        self.heightChangeCount = 0
+        self.inputTextview.text = ""
+    }
+    
+    @objc private func didTapMoreButton() {
+        
     }
     
 }
@@ -108,11 +126,7 @@ extension InputTextView: UITextViewDelegate {
         
         if currentRect.origin.y > previousRect.origin.y {
             if self.heightChangeCount >= 4 { return }
-            
-            if self.heightChangeCount == 0 {
-                self.delegate?.textViewDidChangeHeight(height: 16)
-            }
-            
+            self.delegate?.textViewDidChangeHeight(height: 16)
             self.heightChangeCount += 1
         } else if  currentRect.origin.y < previousRect.origin.y {
             self.delegate?.textViewDidChangeHeight(height: -16)
