@@ -111,6 +111,28 @@ struct Network {
         }
     }
     
+    static func sendMessage(message: Message) {
+        Database.database().reference().child("messages").child(message.id).setValue([
+            "sender": message.sender.id,
+            "receiver": message.receiver.id,
+            "payload": message.payload
+        ])
+        
+        Database.database().reference().child("user-messages").child(message.sender.id).updateChildValues([message.id: 0])
+        Database.database().reference().child("user-messages").child(message.receiver.id).updateChildValues([message.id: 0])
+    }
+    
+    static func observeMessages(completion: @escaping (Result<[Message],DatabaseError>) -> Void) {
+        guard let id = Network.userId else { return completion(.failure(.error)) }
+        
+        Database.database().reference().child("user-messages").child(id).observe(.childAdded) { (messageId) in
+            Database.database().reference().child("messages").child(messageId.key).observeSingleEvent(of: .value) { (snapshot) in
+                guard let dict = snapshot.value else { return }
+                print(dict)
+            }
+        }
+    }
+    
     //Mark: Storage services
     static public func uploadDataToStorage(name: String, data: Data, type: String, completion: @escaping (StorageError?) -> Void) {
         Storage.storage().reference().child("profile_pic").child("\(name).\(type)").putData(data, metadata: nil) { (metadata, error) in
