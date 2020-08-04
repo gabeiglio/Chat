@@ -10,5 +10,5 @@ import Foundation
 
 struct Chat: Hashable {
     let friend: User
-    let messages: [Message]
+    let lastMessage: String
 }
