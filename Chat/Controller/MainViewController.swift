@@ -85,7 +85,7 @@ extension MainViewController {
             self.profileImage.image = nil
             
             //Wipe datasource
-            self.createSnapshot(from: [], completion: nil)
+            self.createSnapshot(from: [], animate: true, completion: nil)
             
             //Final step
             self.showAuthViewController()
@@ -103,6 +103,25 @@ extension MainViewController {
         }
         
         //Here we download all the chats of the current user
+        Network.observeChat { (result) in
+            switch result {
+            case .success(let chat):
+                //Check if chat already exist and update
+                //TODO -  Find a better swiftier way
+                for i in 0..<self.chats.count {
+                    if (self.chats[i].friend.id == chat.friend.id) {
+                        self.chats[i] = chat
+                        return self.createSnapshot(from: self.chats, animate: false, completion: nil)
+                    }
+                }
+                
+                //If chat is new then append it
+                self.chats.append(chat)
+                self.createSnapshot(from: self.chats, animate: true, completion: nil)
+                
+            case .failure(_): break
+            }
+        }
     }
     
     public func createNewChat(to user: User) {
@@ -119,8 +138,8 @@ extension MainViewController {
             }
         }
         
-        self.chats.append(Chat(friend: user, messages: []))
-        self.createSnapshot(from: self.chats) {
+        self.chats.append(Chat(friend: user, lastMessage: ""))
+        self.createSnapshot(from: self.chats, animate: true) {
             self.navigationController?.show(messageController, sender: nil)
         }
     }
@@ -158,7 +177,7 @@ extension MainViewController: UITableViewDelegate  {
                 case .success(let user):
                     Network.retreiveDataFromStorage(path: "profile_pic/\(user.id).jpeg") { (result) in
                         switch result {
-                        case .success(let data): cell.setupCell(image: UIImage(data: data), name: user.name, preview: "")
+                        case .success(let data): cell.setupCell(image: UIImage(data: data), name: user.name, preview: chat.lastMessage)
                         case .failure(_): cell.setupCell(image: nil, name: user.name, preview: "")
                         }
                     }
@@ -170,11 +189,12 @@ extension MainViewController: UITableViewDelegate  {
         })
     }
     
-    private func createSnapshot(from chats: [Chat], completion: (() -> Void)?) {
+    private func createSnapshot(from chats: [Chat], animate: Bool, completion: (() -> Void)?) {
         var snapshot = NSDiffableDataSourceSnapshot<Section, Chat>()
         snapshot.appendSections([.main])
         snapshot.appendItems(chats)
-        dataSource.apply(snapshot, animatingDifferences: true) {
+        
+        dataSource.apply(snapshot, animatingDifferences: animate) {
             if completion != nil {
                 completion!()
             }
