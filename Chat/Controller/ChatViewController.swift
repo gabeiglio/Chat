@@ -80,7 +80,6 @@ class ChatViewController: UIViewController {
         ])
         
         self.configureDataSource()
-        self.createSnapshot(from: [Message(id: "1", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "2", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "3", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "4", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "5", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "6", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "7", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "8", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "9", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "10", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "11", sender: self.sender, receiver: self.receiver, payload: "Hi how are you"),Message(id: "12", sender: self.sender, receiver: self.receiver, payload: "Hi how are you")])
         
         Network.observeMessages { (result) in
             
