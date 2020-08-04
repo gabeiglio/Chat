@@ -122,6 +122,29 @@ struct Network {
         Database.database().reference().child("user-messages").child(message.receiver.id).updateChildValues([message.id: 0])
     }
     
+    static func observeChat(completion: @escaping (Result<Chat, DatabaseError>) -> Void) {
+        guard let id = Network.userId else { return completion(.failure(.error)) }
+        
+        Database.database().reference().child("user-messages").child(id)    .observe(.childAdded) { (messageId) in
+            Database.database().reference().child("messages").child(messageId.key).observeSingleEvent(of: .value) { (snapshot) in
+                guard let dict = snapshot.value as? [String: AnyObject] else { return completion(.failure(.error)) }
+                
+                guard let senderId = dict["sender"] as? String, let receiverId = dict["receiver"] as? String, let payload = dict["payload"] as? String else {
+                    return completion(.failure(.error))
+                }
+                //Get friend user
+                let friendId = (id != senderId) ? senderId : receiverId
+                
+                Network.retreiveUserData(id: friendId) { (result) in
+                    switch result {
+                    case .success(let friend): completion(.success(Chat(friend: friend, lastMessage: payload)))
+                    case .failure(_): break
+                    }
+                }
+            }
+        }
+    }
+    
     static func observeMessages(completion: @escaping (Result<[Message],DatabaseError>) -> Void) {
         guard let id = Network.userId else { return completion(.failure(.error)) }
         
