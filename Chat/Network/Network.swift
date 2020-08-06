@@ -156,6 +156,10 @@ struct Network {
         }
     }
     
+    static func removeObservers() {
+        Database.database().reference().child("user-messages").removeAllObservers()
+    }
+    
     //Mark: Storage services
     static public func uploadDataToStorage(name: String, data: Data, type: String, completion: @escaping (StorageError?) -> Void) {
         Storage.storage().reference().child("profile_pic").child("\(name).\(type)").putData(data, metadata: nil) { (metadata, error) in

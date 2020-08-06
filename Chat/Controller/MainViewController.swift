@@ -88,6 +88,7 @@ extension MainViewController {
             self.createSnapshot(from: [], animate: true, completion: nil)
             
             //Final step
+            Network.removeObservers()
             self.showAuthViewController()
         }
     }
@@ -156,6 +157,7 @@ extension MainViewController: UITableViewDelegate  {
     
     internal func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let messageController = ChatViewController()
+                
         messageController.navigationItem.title = self.chats[indexPath.row].friend.name
         messageController.modalPresentationStyle = .fullScreen
         self.navigationController?.show(messageController, sender: nil)
