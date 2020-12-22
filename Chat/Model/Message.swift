@@ -10,7 +10,21 @@ import Foundation
 
 struct Message: Hashable {
     let id: String
-    let sender: User
-    let receiver: User
+    let sender: String
+    let receiver: String
     let payload: String
+}
+
+extension Message {
+    static public func getDummyMessages() -> [Message] {
+        var messages = [Message]()
+        
+        messages.append(Message(id: "1", sender: "0", receiver: "1", payload: "Hello"))
+        messages.append(Message(id: "2", sender: "0", receiver: "1", payload: "Hello"))
+        messages.append(Message(id: "3", sender: "1", receiver: "0", payload: "How are you?"))
+        messages.append(Message(id: "4", sender: "1", receiver: "0", payload: "Good and you"))
+        messages.append(Message(id: "5", sender: "0", receiver: "1", payload: "segqeoigaeoimjvoioewfjioi"))
+
+        return messages
+    }
 }
