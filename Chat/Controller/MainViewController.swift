@@ -156,11 +156,13 @@ extension MainViewController: UITableViewDelegate  {
     }
     
     internal func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let messageController = ChatViewController()
+        let chatController = ChatViewController()
+        chatController.sender = self.user
+        chatController.receiver = self.chats[indexPath.row].friend
                 
-        messageController.navigationItem.title = self.chats[indexPath.row].friend.name
-        messageController.modalPresentationStyle = .fullScreen
-        self.navigationController?.show(messageController, sender: nil)
+        chatController.navigationItem.title = self.chats[indexPath.row].friend.name
+        chatController.modalPresentationStyle = .fullScreen
+        self.navigationController?.show(chatController, sender: nil)
     }
     
     internal func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {

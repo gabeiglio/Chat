@@ -14,7 +14,8 @@ class ChatViewController: UIViewController {
         
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.scrollDirection = .vertical
-        flowLayout.sectionInset = UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5)
+        flowLayout.minimumLineSpacing = 5
+        flowLayout.sectionInset = UIEdgeInsets(top: 5, left: 8, bottom: 5, right: 8)
         
         let collection = UICollectionView(frame: CGRect.zero, collectionViewLayout: flowLayout)
         collection.translatesAutoresizingMaskIntoConstraints = false
@@ -53,36 +54,16 @@ class ChatViewController: UIViewController {
         self.inputTextView.delegate = self
         self.collectionView.delegate = self
         
-        //Setup self
-        self.view.backgroundColor = .white
-        self.navigationController?.navigationBar.prefersLargeTitles = false
-        
-        //Setup inputTextView
-        self.view.addSubview(self.inputTextView)
-        
-        self.inputTextBottomConstraint = self.inputTextView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
-        self.inputTextBottomConstraint?.isActive = true
-        
-        self.inputTextHeightConstraint = self.inputTextView.heightAnchor.constraint(equalToConstant: 50)
-        self.inputTextHeightConstraint?.isActive = true
-        NSLayoutConstraint.activate([
-            self.inputTextView.leftAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leftAnchor),
-            self.inputTextView.rightAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.rightAnchor),
-        ])
-        
-        //Setup collection view
-        self.view.addSubview(self.collectionView)
-        NSLayoutConstraint.activate([
-            self.collectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-            self.collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            self.collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.collectionView.bottomAnchor.constraint(equalTo: self.inputTextView.topAnchor)
-        ])
-        
+        self.setupViews()
         self.configureDataSource()
         
-        Network.observeMessages { (result) in
-            
+        Network.observeMessages(from: self.receiver) { (result) in
+            switch result {
+            case .success(let message):
+                self.messages.append(message)
+                self.createSnapshot(from: self.messages)
+            case .failure(let error): print(error)
+            }
         }
     }
     
@@ -94,7 +75,7 @@ extension ChatViewController: UICollectionViewDelegate, UICollectionViewDelegate
         let dataSource = UICollectionViewDiffableDataSource<Section, Message>(collectionView: self.collectionView) { (collectionView, indexPath, message) -> UICollectionViewCell? in
             
             guard let cell = self.collectionView.dequeueReusableCell(withReuseIdentifier: "messageCell", for: indexPath) as? MessagesCollectionViewCell else { return UICollectionViewCell() }
-            cell.setupCell(message: message.payload)
+            cell.setupCell(message: message.payload, isSender: message.sender == self.sender.id)
             return cell
             
         }
@@ -108,16 +89,21 @@ extension ChatViewController: UICollectionViewDelegate, UICollectionViewDelegate
         self.dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    internal func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: self.collectionView.frame.size.width / 1.8, height: 50)
+    internal func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
+                                 sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let chat = self.messages[indexPath.item]
+        let size = CGSize(width: 250, height: 1000)
+        let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+        var estimatedFrame = NSString(string: chat.payload).boundingRect(with: size, options: options, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 15)], context: nil)
+        estimatedFrame.size.height += 15
+        return CGSize(width: self.collectionView.frame.width - 16, height: estimatedFrame.height + 17)
     }
-    
 }
 
 //Handle input text view delegate
 extension ChatViewController: InputTextViewDelegate {
     internal func didTapSendButton(text: String) {
-        Network.sendMessage(message: Message(id: UUID().uuidString, sender: self.sender, receiver: self.receiver, payload: text))
+        Network.sendMessage(message: Message(id: UUID().uuidString, sender: self.sender.id, receiver: self.receiver.id, payload: text))
         self.inputTextHeightConstraint?.constant = 50
         self.view.layoutIfNeeded()
     }
@@ -149,5 +135,37 @@ extension ChatViewController {
             self.inputTextBottomConstraint?.constant = 0
             self.view.layoutIfNeeded()
         }
+    }
+}
+
+//Handle initialization of user interface views
+extension ChatViewController {
+    private func setupViews() {
+        
+        //Setup self
+        self.view.backgroundColor = .white
+        self.navigationController?.navigationBar.prefersLargeTitles = false
+        
+        //Setup inputTextView
+        self.view.addSubview(self.inputTextView)
+        
+        self.inputTextBottomConstraint = self.inputTextView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor)
+        self.inputTextBottomConstraint?.isActive = true
+        
+        self.inputTextHeightConstraint = self.inputTextView.heightAnchor.constraint(equalToConstant: 50)
+        self.inputTextHeightConstraint?.isActive = true
+        NSLayoutConstraint.activate([
+            self.inputTextView.leftAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leftAnchor),
+            self.inputTextView.rightAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.rightAnchor),
+        ])
+        
+        //Setup collection view
+        self.view.addSubview(self.collectionView)
+        NSLayoutConstraint.activate([
+            self.collectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            self.collectionView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
+            self.collectionView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
+            self.collectionView.bottomAnchor.constraint(equalTo: self.inputTextView.topAnchor)
+        ])
     }
 }
