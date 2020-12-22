@@ -113,13 +113,13 @@ struct Network {
     
     static func sendMessage(message: Message) {
         Database.database().reference().child("messages").child(message.id).setValue([
-            "sender": message.sender.id,
-            "receiver": message.receiver.id,
+            "sender": message.sender,
+            "receiver": message.receiver,
             "payload": message.payload
         ])
         
-        Database.database().reference().child("user-messages").child(message.sender.id).updateChildValues([message.id: 0])
-        Database.database().reference().child("user-messages").child(message.receiver.id).updateChildValues([message.id: 0])
+        Database.database().reference().child("user-messages").child(message.sender).updateChildValues([message.id: 0])
+        Database.database().reference().child("user-messages").child(message.receiver).updateChildValues([message.id: 0])
     }
     
     static func observeChat(completion: @escaping (Result<Chat, DatabaseError>) -> Void) {
@@ -145,13 +145,24 @@ struct Network {
         }
     }
     
-    static func observeMessages(completion: @escaping (Result<[Message],DatabaseError>) -> Void) {
+    static func observeMessages(from receiver: User, completion: @escaping (Result<Message,DatabaseError>) -> Void) {
         guard let id = Network.userId else { return completion(.failure(.error)) }
         
         Database.database().reference().child("user-messages").child(id).observe(.childAdded) { (messageId) in
             Database.database().reference().child("messages").child(messageId.key).observeSingleEvent(of: .value) { (snapshot) in
-                guard let dict = snapshot.value else { return }
-                print(dict)
+                guard let dict = snapshot.value as? [String: AnyObject] else { return }
+                
+                guard let senderId = dict["sender"] as? String, let receiverId = dict["receiver"] as? String, let payload = dict["payload"] as? String else {
+                    return completion(.failure(.error))
+                }
+                  
+                let message = Message(id: snapshot.key, sender: senderId, receiver: receiverId, payload: payload)
+                return completion(.success(message))
+//                if receiverId == receiver.id {
+//                    let message = Message(id: snapshot.key, sender: senderId, receiver: receiverId, payload: payload)
+//                    return completion(.success(message))
+//                }
+                
             }
         }
     }
