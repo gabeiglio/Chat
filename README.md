@@ -3,12 +3,12 @@
 Chat is a native iOS application in which it combines many technologies and frameworks together to deliver a fast and efficient way to send and receives messages.
 
 ## Features:
-    - Authentication with email
-    - Send and receives text
+    - Authentication with email ✅
+    - Send and receives text ✅
     - Send and receive images
     - Send an receive voice notes
     - Spotlight search contacts
-    - Customize profile settings
+    - Customize profile settings ✅
     - Homescreen quick actions
     - Save pictures to device
     - Light/Dark mode
