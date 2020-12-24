@@ -57,6 +57,8 @@ class ChatViewController: UIViewController {
         self.setupViews()
         self.configureDataSource()
         
+        self.collectionView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard)))
+        
         Network.observeMessages(from: self.receiver) { (result) in
             switch result {
             case .success(let message):
@@ -103,7 +105,7 @@ extension ChatViewController: UICollectionViewDelegate, UICollectionViewDelegate
 //Handle input text view delegate
 extension ChatViewController: InputTextViewDelegate {
     internal func didTapSendButton(text: String) {
-        Network.sendMessage(message: Message(id: UUID().uuidString, sender: self.sender.id, receiver: self.receiver.id, payload: text))
+        Network.sendMessage(id: UUID().uuidString, sender: self.sender.id, receiver: self.receiver.id, payload: text)
         self.inputTextHeightConstraint?.constant = 50
         self.view.layoutIfNeeded()
     }
@@ -135,6 +137,10 @@ extension ChatViewController {
             self.inputTextBottomConstraint?.constant = 0
             self.view.layoutIfNeeded()
         }
+    }
+    
+    @objc internal func dismissKeyboard() {
+        self.collectionView.endEditing(true)
     }
 }
 
