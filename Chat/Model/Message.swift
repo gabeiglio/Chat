@@ -13,4 +13,5 @@ struct Message: Hashable {
     let sender: String
     let receiver: String
     let payload: String
+    let timestamp: Date
 }
