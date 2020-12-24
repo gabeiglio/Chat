@@ -111,15 +111,16 @@ struct Network {
         }
     }
     
-    static func sendMessage(message: Message) {
-        Database.database().reference().child("messages").child(message.id).setValue([
-            "sender": message.sender,
-            "receiver": message.receiver,
-            "payload": message.payload
+    static func sendMessage(id: String, sender: String, receiver: String, payload: String) {
+        Database.database().reference().child("messages").child(id).setValue([
+            "sender":    sender,
+            "receiver":  receiver,
+            "payload":   payload,
+            "timestamp": ServerValue.timestamp()
         ])
         
-        Database.database().reference().child("user-messages").child(message.sender).updateChildValues([message.id: 0])
-        Database.database().reference().child("user-messages").child(message.receiver).updateChildValues([message.id: 0])
+        Database.database().reference().child("user-messages").child(sender).updateChildValues([id: 0])
+        Database.database().reference().child("user-messages").child(receiver).updateChildValues([id: 0])
     }
     
     static func observeChat(completion: @escaping (Result<Chat, DatabaseError>) -> Void) {
@@ -156,8 +157,12 @@ struct Network {
                     return completion(.failure(.error))
                 }
                 
+                //Get date from timestap
+                guard let date = dict["timestamp"] as? TimeInterval else { return completion(.failure(.error)) }
+                
+                print(Date(timeIntervalSince1970: date/1000))
                 if (senderId == id || senderId == receiver.id) && (receiverId == id || receiverId == receiver.id) {
-                    let message = Message(id: snapshot.key, sender: senderId, receiver: receiverId, payload: payload)
+                    let message = Message(id: snapshot.key, sender: senderId, receiver: receiverId, payload: payload, timestamp: Date(timeIntervalSince1970: date/1000))
                     return completion(.success(message))
                 }
     
