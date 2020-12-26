@@ -114,7 +114,7 @@ class InputTextView: UIView {
     }
     
     @objc private func didTapMoreButton() {
-        
+        self.delegate?.didTapMoreButton()
     }
     
 }
